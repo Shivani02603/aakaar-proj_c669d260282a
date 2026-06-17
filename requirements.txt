@@ -1,0 +1,103 @@
+**Project Name:** RAG Document Q&A  
+**Domain:** Data Analysis / Natural Language Processing  
+**Client:** Not specified  
+**Team Size:** Not specified  
+**Timeline:** Not specified  
+**Budget:** Not specified  
+**Primary Users:** End users who upload Excel files and ask natural-language questions about the data  
+**Tech Constraints:** Python FastAPI (backend), Next.js (frontend), PostgreSQL with pgvector extension, Docker Compose for deployment, OpenAI text-embedding-3-small, Google Generative AI SDK (gemini-2.0-flash)
+
+**Project Summary:** This project builds a web application that allows users to upload Excel (.xlsx) files and ask natural-language questions about the data. The system ingests Excel files by parsing them with pandas, chunking the content, embedding chunks with OpenAI, and storing vectors in pgvector. On query, it retrieves relevant chunks via cosine similarity and uses Google Gemini to generate answers with source citations, all within named chat sessions stored in PostgreSQL.
+
+---
+
+## Functional Requirements
+
+| ID | Module | Requirement | Source Section | Priority |
+|---|---|---|---|---|
+| FR-001 | Ingestion Pipeline | Parse each uploaded Excel sheet using pandas | Ingestion pipeline | High |
+| FR-002 | Ingestion Pipeline | Split content into overlapping chunks with chunk size 1000 tokens and overlap 200 tokens | Ingestion pipeline | High |
+| FR-003 | Ingestion Pipeline | Embed each chunk using text-embedding-3-small (OpenAI) | Ingestion pipeline | High |
+| FR-004 | Ingestion Pipeline | Store vectors in pgvector (PostgreSQL extension) | Ingestion pipeline | High |
+| FR-005 | Query Pipeline | Embed the user query | Query pipeline | High |
+| FR-006 | Query Pipeline | Retrieve top-5 chunks by cosine similarity from pgvector | Query pipeline | High |
+| FR-007 | Query Pipeline | Pass retrieved context plus question to gemini-2.0-flash (Google Generative AI SDK) | Query pipeline | High |
+| FR-008 | Query Pipeline | Return the answer with source citations (filename, row range) | Query pipeline | High |
+| FR-009 | Session Management | Each user has named chat sessions stored in PostgreSQL | Session management | High |
+| FR-010 | Session Management | Maintain tables: users, sessions, messages, uploaded_files | Session management | High |
+| FR-011 | Session Management | Users can create new chat sessions | Session management | High |
+| FR-012 | Session Management | Users can switch between existing chat sessions | Session management | High |
+| FR-013 | Session Management | Users can see full conversation history | Session management | High |
+| FR-014 | Session Management | Each uploaded file is linked to a session | Session management | High |
+| FR-015 | Frontend | Provide a two-panel layout | Frontend | High |
+| FR-016 | Frontend | Left panel contains file upload functionality | Frontend | High |
+| FR-017 | Frontend | Left panel contains session list | Frontend | High |
+| FR-018 | Frontend | Right panel contains chat window | Frontend | High |
+| FR-019 | Frontend | Show source citations below each answer in the chat window | Frontend | High |
+| FR-020 | Deployment | Deploy using Docker Compose with backend, frontend, and postgres services | Deploy | High |
+
+Here are the extracted non-functional requirements, constraints, integrations, and gaps/risks from the provided BRD.
+
+### Non-Functional Requirements
+
+| ID | Category | Requirement | Measurable Metric | Source Section |
+|---|---|---|---|---|
+| NFR-001 | Performance | Retrieve top-5 chunks by cosine similarity from pgvector on user question. | Not specified — define before dev | Query pipeline |
+| NFR-002 | Performance | Pass retrieved context + question to gemini-2.0-flash and return the answer. | Not specified — define before dev | Query pipeline |
+| NFR-003 | Scalability | Store vectors in pgvector (PostgreSQL extension). | Not specified — define before dev | Ingestion pipeline |
+| NFR-004 | Scalability | Each user has named chat sessions stored in PostgreSQL. | Not specified — define before dev | Session management |
+| NFR-005 | Security | Each uploaded file is linked to a session. | Not specified — define before dev | Session management |
+| NFR-006 | Usability | Users can create/switch sessions and see full conversation history. | Not specified — define before dev | Session management |
+| NFR-007 | Usability | Frontend: Next.js with two-panel layout — left panel: file upload + session list; right panel: chat window with source citations shown below each answer. | Not specified — define before dev | Backend: Python FastAPI. Frontend: Next.js... |
+| NFR-008 | Reliability | Deploy: Docker Compose (backend + frontend + postgres services). | Not specified — define before dev | Deploy: Docker Compose... |
+
+### Constraints and Integrations
+
+**Constraints:**
+
+| ID | Type | Description | Impact |
+|---|---|---|---|
+| CON-001 | Technology | Backend must be Python FastAPI. | Limits backend framework choice to FastAPI. |
+| CON-002 | Technology | Frontend must be Next.js. | Limits frontend framework choice to Next.js. |
+| CON-003 | Technology | Database must be PostgreSQL with pgvector extension. | Requires PostgreSQL and the pgvector extension. |
+| CON-004 | Technology | Deployment must use Docker Compose (backend + frontend + postgres services). | Requires containerization and orchestration via Docker Compose. |
+| CON-005 | Technology | Embedding model must be text-embedding-3-small (OpenAI). | Requires an OpenAI API key and incurs OpenAI API costs. |
+| CON-006 | Technology | LLM must be gemini-2.0-flash (Google Generative AI SDK). | Requires a Google Generative AI API key and incurs Google API costs. |
+
+**Integrations:**
+
+| ID | System | Purpose | Priority | Notes |
+|---|---|---|---|---|
+| INT-001 | OpenAI (text-embedding-3-small) | Embed each chunk of uploaded Excel data. | High | Requires API key and internet access. |
+| INT-002 | Google Generative AI (gemini-2.0-flash) | Generate answers to user questions based on retrieved context. | High | Requires API key and internet access. |
+| INT-003 | PostgreSQL (pgvector) | Store vectors, user sessions, chat messages, and uploaded file metadata. | High | Must be deployed with pgvector extension. |
+
+### Gaps and Risks
+
+| ID | Type | Description | Question for Client | Risk if Unresolved |
+|---|---|---|---|---|
+| GAP-001 | Missing | No authentication or authorization mechanism is specified. | How will users be authenticated and authorized? Is there a login system? | Unauthorized access to data and sessions; inability to isolate user data. |
+| GAP-002 | Missing | No error handling or logging strategy is defined. | What is the expected error handling and logging strategy for API failures, database errors, or LLM timeouts? | System instability, difficult debugging, poor user experience on failure. |
+| GAP-003 | Missing | No data retention or deletion policy is specified. | How long should uploaded files, vectors, and chat history be retained? Is there a deletion mechanism? | Potential data privacy/compliance issues; database bloat. |
+| GAP-004 | Missing | No performance or latency requirements are defined. | What is the acceptable response time for a query? What is the maximum file size for upload? | User dissatisfaction with slow responses; system overload from large files. |
+| GAP-005 | Missing | No concurrency or multi-user handling is specified. | How many concurrent users should the system support? | System failure or severe degradation under load. |
+| GAP-006 | Missing | No security requirements for file uploads are defined. | Are there any restrictions on file content (e.g., malicious macros, PII)? | Security vulnerabilities (e.g., injection attacks) or data leakage. |
+| GAP-007 | Missing | No testing or quality assurance requirements are specified. | What are the testing requirements (unit, integration, performance, security)? | Unreliable software; undetected bugs in production. |
+| GAP-008 | Missing | No monitoring or observability requirements are defined. | How will the system be monitored in production (e.g., logs, metrics, alerts)? | Inability to detect and respond to issues proactively. |
+| GAP-009 | Missing | No backup or disaster recovery plan is specified. | What is the backup strategy for the PostgreSQL database? | Permanent data loss in case of failure. |
+| GAP-010 | Missing | No specific data privacy or compliance requirements are mentioned. | Are there any data privacy regulations (e.g., GDPR, CCPA) that apply to the data being uploaded? | Legal and financial penalties for non-compliance. |
+# AI layer dependencies
+google-generativeai>=0.8.0
+numpy==1.26.2
+openai==1.3.7
+openpyxl>=3.1.2
+pandas==2.1.3
+pgvector>=0.2.0
+sqlalchemy
+alembic
+fastapi
+uvicorn
+python-jose
+passlib
+pydantic
+psycopg2-binary
